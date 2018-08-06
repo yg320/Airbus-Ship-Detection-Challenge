@@ -1,0 +1,1 @@
+/anaconda3/envs/kaggle_salt/bin/python3.6 /Users/yakirgorski/PycharmProjects/Airbus-Ship-Detection-Challenge/image2image.py  --logger /Users/yakirgorski/Documents/kaggle/Experiments/Airbus_Ship_Detection_Challenge/kickoff/checkpoint --batch 8
