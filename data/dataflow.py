@@ -9,8 +9,8 @@ from tensorpack import RNGDataFlow
 from tensorpack.utils.argtools import shape2d
 from matplotlib import pyplot as plt
 
-TRAIN_SHIP_SEGMANTATION_PATH = os.path.join('/Users/yakirgorski/Documents/kaggle/Data', 'train_ship_segmentations.csv')
-TRAIN_DIR_PATH = '/Users/yakirgorski/Documents/kaggle/Data/train'
+TRAIN_SHIP_SEGMANTATION_PATH = os.path.join('/home/paperspace/kaggle/Data/Airbus_ship/raw/all', 'train_ship_segmentations.csv')
+TRAIN_DIR_PATH = '/home/paperspace/kaggle/Data/Airbus_ship/raw/all/train'
 
 class ImageAndMaskFromFile(RNGDataFlow):
     """ Produce images read from a list of files. """
@@ -71,6 +71,9 @@ def get_data(image_ids, batch_size=1, is_train=False):
     ds = ImageAndMaskFromFile(image_ids, channel=3, shuffle=True)
 
     if is_train:
+
+        number_of_prefetch = 8
+
         augs_with_label = [imgaug.RandomCrop(256),
                            imgaug.Flip(horiz=True, prob=0.5),
                            imgaug.Flip(vert=True, prob=0.5)]
@@ -101,6 +104,9 @@ def get_data(image_ids, batch_size=1, is_train=False):
         # ]
 
     else:
+
+        number_of_prefetch = 1
+
         augs_with_label = [imgaug.CenterCrop(256)]
         augs_no_label = []
 
@@ -108,7 +114,7 @@ def get_data(image_ids, batch_size=1, is_train=False):
     ds = AugmentImageComponents(ds, augs_no_label, [0])
 
     ds = BatchData(ds, batch_size)
-    ds = PrefetchData(ds, 20, 1)
+    ds = PrefetchData(ds, 30, number_of_prefetch)
 
     return ds
 

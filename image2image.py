@@ -110,12 +110,12 @@ def sample(model_path, ds, output_path):
 
     pred = SimpleDatasetPredictor(pred, ds)
     for counter, o in enumerate(pred.get_result()):
-        pickle.dump(o, open(os.path.join(output_path, f'{counter}.pickle')))
+        pickle.dump(o, open(os.path.join(output_path, f'{counter}.pickle'), 'wb'))
 
 
 if __name__ == '__main__':
-    TRAIN_ID_PICKLE_PATH = '/Users/yakirgorski/Documents/kaggle/Data/processed/train_IDs.pickle'
-    VALIDATION_ID_PICKLE_PATH = '/Users/yakirgorski/Documents/kaggle/Data/processed/validation_IDs.pickle'
+    TRAIN_ID_PICKLE_PATH = '/home/paperspace/kaggle/Data/Airbus_ship/processed/train_IDs.pickle'
+    VALIDATION_ID_PICKLE_PATH = '/home/paperspace/kaggle/Data/Airbus_ship/processed/validation_IDs.pickle'
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', help='comma separated list of GPU(s) to use.')
@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
         sample(args.load, ds_validation, args.output_path)
     else:
-
+        validation_IDs = validation_IDs[:500]
         logger.set_logger_dir(args.logger, action='k')
         shutil.copyfile(sys.argv[0], os.path.join(args.logger, os.path.basename(sys.argv[0])))
         train_IDs = pickle.load(open(TRAIN_ID_PICKLE_PATH, 'rb'))
@@ -155,7 +155,7 @@ if __name__ == '__main__':
             callbacks=[
                 PeriodicTrigger(ModelSaver(), every_k_epochs=1),
                 PeriodicTrigger(InferenceRunner(ds_validation, [ScalarStats('L1_loss')]), every_k_epochs=1),
-                ScheduledHyperParamSetter('learning_rate', [(200, 1e-4)])
+                ScheduledHyperParamSetter('learning_rate', [(18, 1e-4)])
             ],
             steps_per_epoch=data.size(),
             max_epoch=300,

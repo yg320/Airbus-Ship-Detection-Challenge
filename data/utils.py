@@ -2,11 +2,11 @@ import numpy as np
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import os
 
-PROCESSED_DATA = '/Users/yakirgorski/Documents/kaggle/Data/processed/'
-TRAIN_ID_PICKLE_PATH = '/Users/yakirgorski/Documents/kaggle/Data/processed/train_IDs.pickle'
-VALIDATION_ID_PICKLE_PATH = '/Users/yakirgorski/Documents/kaggle/Data/processed/validation_IDs.pickle'
-TRAIN_SHIP_SEGMANTATION_PATH = os.path.join('/Users/yakirgorski/Documents/kaggle/Data', 'train_ship_segmentations.csv')
-TRAIN_DIR_PATH = '/Users/yakirgorski/Documents/kaggle/Data/train'
+PROCESSED_DATA = '/home/paperspace/kaggle/Data/Airbus_ship/processed/'
+TRAIN_ID_PICKLE_PATH = '/home/paperspace/kaggle/Data/Airbus_ship/processed/train_IDs.pickle'
+VALIDATION_ID_PICKLE_PATH = '/home/paperspace/kaggle/Data/Airbus_ship/processed/validation_IDs.pickle'
+TRAIN_SHIP_SEGMANTATION_PATH = os.path.join('/home/paperspace/kaggle/Data/Airbus_ship/raw/all', 'train_ship_segmentations.csv')
+TRAIN_DIR_PATH = '/home/paperspace/kaggle/Data/Airbus_ship/raw/all/train'
 
 def rle_decode(mask_rle, shape=(768, 768)):
     '''
