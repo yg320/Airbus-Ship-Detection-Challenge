@@ -5,12 +5,19 @@ import os
 from .utils import MaskRenderer
 from tensorpack import BatchData, AugmentImageComponents, PrefetchData
 from tensorpack import imgaug
-from tensorpack import RNGDataFlow
+from tensorpack import RNGDataFlow, DataFlow
 from tensorpack.utils.argtools import shape2d
 from matplotlib import pyplot as plt
 
-TRAIN_SHIP_SEGMANTATION_PATH = os.path.join('/home/paperspace/kaggle/Data/Airbus_ship/raw/all', 'train_ship_segmentations.csv')
-TRAIN_DIR_PATH = '/home/paperspace/kaggle/Data/Airbus_ship/raw/all/train'
+from os.path import expanduser
+import pickle
+
+home = '/Users/yakirgorski/Documents'
+
+TRAIN_SHIP_SEGMANTATION_PATH = os.path.join(home, 'kaggle/Data/Airbus_ship/raw/all', 'train_ship_segmentations.csv')
+TRAIN_DIR_PATH = os.path.join(home, 'kaggle/Data/Airbus_ship/raw/all/train')
+TRAIN_ID_PICKLE_PATH = os.path.join(home, 'kaggle/Data/Airbus_ship/processed/train_IDs.pickle')
+VALIDATION_ID_PICKLE_PATH = os.path.join(home, 'kaggle/Data/Airbus_ship/processed/validation_IDs.pickle')
 
 class ImageAndMaskFromFile(RNGDataFlow):
     """ Produce images read from a list of files. """
@@ -34,7 +41,7 @@ class ImageAndMaskFromFile(RNGDataFlow):
         self.mask_file_path = TRAIN_SHIP_SEGMANTATION_PATH
         self.images_path = TRAIN_DIR_PATH
         self.mask_renderer = MaskRenderer(masks_file_path=self.mask_file_path)
-
+        self.pad = 63
 
     def size(self):
         return len(self.image_ids)
@@ -46,6 +53,11 @@ class ImageAndMaskFromFile(RNGDataFlow):
         for im_id in self.image_ids:
             im = self._get_image(im_id)
             mask = self._get_mask(im_id)
+
+            if self.pad > 0:
+                im = np.lib.pad(im, ((self.pad, self.pad), (self.pad, self.pad), (0, 0)), mode='reflect')
+                mask = np.lib.pad(mask, ((self.pad, self.pad), (self.pad, self.pad), (0, 0)), mode='reflect')
+
             yield [im, mask]
 
     def _get_mask(self, im_id):
@@ -66,7 +78,9 @@ class ImageAndMaskFromFile(RNGDataFlow):
 
 
 
-def get_data(image_ids, batch_size=1, is_train=False):
+
+
+def get_data(image_ids, batch_size=1, is_train=False, shape=510):
 
     ds = ImageAndMaskFromFile(image_ids, channel=3, shuffle=True)
 
@@ -74,7 +88,7 @@ def get_data(image_ids, batch_size=1, is_train=False):
 
         number_of_prefetch = 8
 
-        augs_with_label = [imgaug.RandomCrop(256),
+        augs_with_label = [imgaug.RandomCrop(shape),
                            imgaug.Flip(horiz=True, prob=0.5),
                            imgaug.Flip(vert=True, prob=0.5)]
 
@@ -91,7 +105,7 @@ def get_data(image_ids, batch_size=1, is_train=False):
         #          imgaug.Contrast((0.6, 1.4), clip=False),
         #          imgaug.Saturation(0.4, rgb=False),
         #          # rgb-bgr conversion for the constants copied from fb.resnet.torch
-        #          imgaug.Lighting(0.1,
+        #          imgaug.Lighting(0.1,—
         #                          eigval=np.asarray(
         #                              [0.2175, 0.0188, 0.0045][::-1]) * 255.0,
         #                          eigvec=np.array(
@@ -107,28 +121,33 @@ def get_data(image_ids, batch_size=1, is_train=False):
 
         number_of_prefetch = 1
 
-        augs_with_label = [imgaug.CenterCrop(256)]
+        augs_with_label = [imgaug.CenterCrop(shape)]
         augs_no_label = []
 
     ds = AugmentImageComponents(ds, augs_with_label, (0, 1))
     ds = AugmentImageComponents(ds, augs_no_label, [0])
 
     ds = BatchData(ds, batch_size)
-    ds = PrefetchData(ds, 30, number_of_prefetch)
+    ds = PrefetchData(ds, 30, 1) #number_of_prefetch)
 
     return ds
 
 if __name__ == '__main__':
-    N = 49
-    image_ids = N * ['0a1a7f395.jpg'] #glob.glob('/Users/yakirgorski/Documents/kaggle/Data/train/*')[:30]
-    ds = get_data(image_ids=image_ids, is_train=True).get_data()
+    N = 16
 
-    for i in range(N):
-        image, mask = next(ds)
+    validation_IDs = pickle.load(open(VALIDATION_ID_PICKLE_PATH, 'rb'))
 
-        plt.subplot(7,7,i+1)
-        plt.imshow(image[0])
+    ds = get_data(image_ids=validation_IDs, batch_size=N, is_train=False).get_data()
 
+
+    images, masks = next(ds)
+
+    for i,im in enumerate(images):
+
+        plt.subplot(4,4,i+1)
+        plt.imshow(im)
+
+    plt.show()
     # for i in range(N):
     #     image, mask = next(ds)
     #     plt.subplot(N,2,i*2+1)
